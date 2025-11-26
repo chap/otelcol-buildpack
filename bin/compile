@@ -38,14 +38,14 @@ case "$(uname -m)" in
     ;;
 esac
 
-### Download Traefik if needed
+### Download Otelcol if needed
 
 # If OTELCOL_VERSION doesn't start with 'v', add it
 case "$OTELCOL_VERSION" in
   v*) ;;
   *) OTELCOL_VERSION="v${OTELCOL_VERSION}" ;;
 esac
-TRAEFIK_URL="https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/${OTELCOL_VERSION}/otelcol-contrib_${OTELCOL_VERSION}_${platform}_${arch}.tar.gz"
+OTELCOL_URL="https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/${OTELCOL_VERSION}/otelcol-contrib_${OTELCOL_VERSION}_${platform}_${arch}.tar.gz"
 CACHED_BINARY="$CACHE_DIR/otelcol-${OTELCOL_VERSION}"
 VERSION_FILE="$CACHE_DIR/otelcol-version"
 
@@ -82,7 +82,7 @@ else
     echo "       Using cached Otelcol ${OTELCOL_VERSION}"
 fi
 
-# Copy traefik from cache to build directory
+# Copy otelcol from cache to build directory
 cp "$CACHED_BINARY" "$BUILD_DIR/vendor/otelcol/otelcol-contrib"
 
 
