@@ -1,0 +1,93 @@
+#!/bin/sh
+
+# Default versions
+OTELCOL_VERSION="${OTELCOL_VERSION:-0.140.0}"
+
+# Exit on error
+set -e
+
+# Define buildpack directories
+BUILDPACK_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+BUILD_DIR="$1"
+CACHE_DIR="$2"
+ENV_DIR="$3"
+
+# Create necessary directories
+mkdir -p "$BUILD_DIR/vendor/otelcol"
+mkdir -p "$CACHE_DIR"
+
+
+# Determine platform and architecture
+platform=""
+case "$(uname -s)" in
+  Linux*) platform="linux" ;;
+  Darwin*) platform="darwin" ;;
+  *) 
+    echo "Unsupported platform: $(uname -s)"
+    exit 1 
+    ;;
+esac
+
+arch=""
+case "$(uname -m)" in
+  x86_64) arch="amd64" ;;
+  arm64) arch="arm64" ;;
+  *) 
+    echo "Unsupported architecture: $(uname -m)"
+    exit 1 
+    ;;
+esac
+
+### Download Traefik if needed
+
+# If OTELCOL_VERSION doesn't start with 'v', add it
+case "$OTELCOL_VERSION" in
+  v*) ;;
+  *) OTELCOL_VERSION="v${OTELCOL_VERSION}" ;;
+esac
+TRAEFIK_URL="https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/${OTELCOL_VERSION}/otelcol-contrib_${OTELCOL_VERSION}_${platform}_${arch}.tar.gz"
+CACHED_BINARY="$CACHE_DIR/otelcol-${OTELCOL_VERSION}"
+VERSION_FILE="$CACHE_DIR/otelcol-version"
+
+# Function to check if we need to download
+needs_download() {
+    # Check if binary exists
+    if [ ! -f "$CACHED_BINARY" ]; then
+        return 0  # true - need to download
+    fi
+    
+    # Check if version file exists and matches
+    if [ ! -f "$VERSION_FILE" ] || [ "$(cat "$VERSION_FILE" 2>/dev/null)" != "$OTELCOL_VERSION" ]; then
+        return 0  # true - need to download
+    fi
+    
+    return 1  # false - don't need to download
+}
+
+# Download and cache Otelcol if needed
+if needs_download; then
+    echo "       Downloading Otelcol ${OTELCOL_URL}"
+    curl -sL "$OTELCOL_URL" -o otelcol-contrib.tar.gz
+    tar xzf otelcol-contrib.tar.gz
+    
+    # Store in cache with version suffix
+    mv otelcol-contrib "$CACHED_BINARY"
+    echo "$OTELCOL_VERSION" > "$VERSION_FILE"
+    
+    # Clean up
+    rm otelcol-contrib.tar.gz
+    
+    echo "       Otelcol ${OTELCOL_VERSION} cached"
+else
+    echo "       Using cached Otelcol ${OTELCOL_VERSION}"
+fi
+
+# Copy traefik from cache to build directory
+cp "$CACHED_BINARY" "$BUILD_DIR/vendor/otelcol/otelcol-contrib"
+
+
+# Create .profile.d script to add vendor/otelcol to PATH
+mkdir -p "$BUILD_DIR/.profile.d"
+cat > "$BUILD_DIR/.profile.d/otelcol-defaults.sh" << 'EOF'
+export PATH=$PATH:$HOME/vendor/otelcol
+EOF

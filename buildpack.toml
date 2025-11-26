@@ -1,0 +1,18 @@
+# buildpack.toml
+api = "0.10"
+
+[buildpack]
+id = "chap/otelcol"
+version = "0.0.1"
+name = "otelcol"
+
+[[stacks]]
+id = "*"
+
+[[targets]]
+os = "linux"
+arch = "arm64"
+
+[[targets]]
+os = "linux"
+arch = "amd64"
