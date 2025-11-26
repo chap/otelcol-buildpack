@@ -40,12 +40,7 @@ esac
 
 ### Download Otelcol if needed
 
-# If OTELCOL_VERSION doesn't start with 'v', add it
-case "$OTELCOL_VERSION" in
-  v*) ;;
-  *) OTELCOL_VERSION="v${OTELCOL_VERSION}" ;;
-esac
-OTELCOL_URL="https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/${OTELCOL_VERSION}/otelcol-contrib_${OTELCOL_VERSION}_${platform}_${arch}.tar.gz"
+OTELCOL_URL="https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v${OTELCOL_VERSION}/otelcol-contrib_${OTELCOL_VERSION}_${platform}_${arch}.tar.gz"
 CACHED_BINARY="$CACHE_DIR/otelcol-${OTELCOL_VERSION}"
 VERSION_FILE="$CACHE_DIR/otelcol-version"
 
